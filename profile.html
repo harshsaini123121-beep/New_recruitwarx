@@ -387,23 +387,35 @@
 
         function displayWorkExperience(experiences) {
             const container = document.getElementById('workExperienceContainer');
-            if (experiences.length === 0) return;
+            if (!experiences || experiences.length === 0) {
+                container.innerHTML = '<p class="text-muted">No work experience added yet. <a href="resume.html">Add your experience</a></p>';
+                return;
+            }
             
-            container.innerHTML = experiences.map(exp => `
+            container.innerHTML = experiences.map((exp, index) => `
                 <div class="experience-item mb-4">
                     <h6 class="mb-1">${exp.jobTitle}</h6>
                     <p class="text-muted mb-1">${exp.company}</p>
                     <p class="text-muted mb-2">${exp.startDate} - ${exp.endDate}</p>
                     <p class="mb-0">${exp.description}</p>
                 </div>
-            `).join('<hr>');
+                ${index < experiences.length - 1 ? '<hr>' : ''}
+            `).join('');
         }
 
         function displaySkills(skillsString) {
             const container = document.getElementById('skillsContainer');
+            if (!skillsString) {
+                container.innerHTML = '<p class="text-muted">No skills added yet. <a href="resume.html">Add your skills</a></p>';
+                return;
+            }
+            
             const skills = skillsString.split(',').map(s => s.trim()).filter(s => s);
             
-            if (skills.length === 0) return;
+            if (skills.length === 0) {
+                container.innerHTML = '<p class="text-muted">No skills added yet. <a href="resume.html">Add your skills</a></p>';
+                return;
+            }
             
             container.innerHTML = skills.map(skill => 
                 `<span class="skill-tag">${skill}</span>`
@@ -412,15 +424,19 @@
 
         function displayEducation(education) {
             const container = document.getElementById('educationContainer');
-            if (education.length === 0) return;
+            if (!education || education.length === 0) {
+                container.innerHTML = '<p class="text-muted">No education added yet. <a href="resume.html">Add your education</a></p>';
+                return;
+            }
             
-            container.innerHTML = education.map(edu => `
+            container.innerHTML = education.map((edu, index) => `
                 <div class="education-item mb-3">
                     <h6 class="mb-1">${edu.degree}</h6>
                     <p class="text-muted mb-1">${edu.institution}</p>
                     <p class="text-muted mb-2">${edu.year}</p>
                     ${edu.grade ? `<p class="mb-0">Grade: ${edu.grade}</p>` : ''}
                 </div>
+                ${index < education.length - 1 ? '<hr>' : ''}
             `).join('');
         }
 

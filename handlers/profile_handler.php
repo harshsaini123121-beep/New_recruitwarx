@@ -1,9 +1,6 @@
 <?php
 session_start(); // Keep this at the very top
 
-// **FIX:** Start the session at the very beginning of the script.
-// session_start();
-
 require_once '../config/database.php';
 require_once '../config/auth.php';
 
@@ -51,28 +48,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             break;
             
         case 'save_resume':
-            // Note: This case assumes a user_resume table exists.
-            // Your install.php does not create this table, which could be a future issue.
-            // For now, it updates the main users table.
-            $resume_data = [
-                'skills' => $_POST['skills'] ?? '',
-                'summary' => $_POST['summary'] ?? ''
-            ];
+            $work_experience = $_POST['work_experience'] ?? '';
+            $education = $_POST['education'] ?? '';
+            $projects = $_POST['projects'] ?? '';
+            $certifications = $_POST['certifications'] ?? '';
+            $skills = $_POST['skills'] ?? '';
+            $summary = $_POST['summary'] ?? '';
             
             $query = "UPDATE users SET 
                       skills = :skills,
-                      bio = :summary
+                      bio = :summary,
+                      work_experience = :work_experience,
+                      education = :education
                       WHERE id = :user_id";
             $stmt = $db->prepare($query);
             
-            $stmt->bindValue(':skills', $resume_data['skills']);
-            $stmt->bindValue(':summary', $resume_data['summary']);
+            $stmt->bindValue(':skills', $skills);
+            $stmt->bindValue(':summary', $summary);
+            $stmt->bindValue(':work_experience', $work_experience);
+            $stmt->bindValue(':education', $education);
             $stmt->bindValue(':user_id', $_SESSION['user_id']);
             
             if ($stmt->execute()) {
                 echo json_encode(['success' => true, 'message' => 'Resume saved successfully']);
             } else {
-                echo json_encode(['success' => false, 'message' => 'Failed to update profile with resume info']);
+                echo json_encode(['success' => false, 'message' => 'Failed to save resume']);
             }
             break;
             
@@ -85,7 +85,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     switch ($action) {
         case 'get_profile':
-            // Simplified query to avoid potential issues with a missing user_resume table.
             $query = "SELECT * FROM users WHERE id = :user_id";
             $stmt = $db->prepare($query);
             $stmt->bindValue(':user_id', $_SESSION['user_id']);
@@ -94,9 +93,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $profile = $stmt->fetch(PDO::FETCH_ASSOC);
             
             if ($profile) {
-                // Example for get_profile case
-                $profile['work_experience'] = json_encode($profile['work_experience']);
-                $profile['education'] = json_encode($profile['education']);
+                // Parse JSON fields if they exist
+                if ($profile['work_experience']) {
+                    $profile['work_experience'] = json_decode($profile['work_experience'], true) ?: [];
+                } else {
+                    $profile['work_experience'] = [];
+                }
+                
+                if ($profile['education']) {
+                    $profile['education'] = json_decode($profile['education'], true) ?: [];
+                } else {
+                    $profile['education'] = [];
+                }
+                
                 $profile['profile_completion'] = calculateProfileCompletion($profile);
                 echo json_encode(['success' => true, 'profile' => $profile]);
             } else {
@@ -140,18 +149,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 function calculateProfileCompletion($profile) {
-    $fields = ['first_name', 'last_name', 'email', 'phone', 'location', 'bio', 'skills'];
-    $total_fields = 7;
+    $fields = ['first_name', 'last_name', 'email', 'phone', 'location', 'bio', 'skills', 'work_experience', 'education'];
+    $total_fields = 9;
     $completed = 0;
     
     foreach ($fields as $field) {
-        if (!empty($profile[$field])) {
+        if ($field === 'work_experience' || $field === 'education') {
+            $data = json_decode($profile[$field] ?? '', true);
+            if (!empty($data)) {
+                $completed++;
+            }
+        } else if (!empty($profile[$field])) {
             $completed++;
         }
     }
     
     return round(($completed / $total_fields) * 100);
 }
-
-// **FIX:** Removed the redundant session_start() from the end of the file.
 ?>

@@ -375,10 +375,12 @@
                 if (result.success && result.profile) {
                     const profile = result.profile;
                     
+                    // Load summary
                     if (profile.bio) {
                         document.getElementById('summary').value = profile.bio;
                     }
                     
+                    // Load skills
                     if (profile.skills) {
                         const skills = profile.skills.split(',');
                         const technical = skills.slice(0, Math.ceil(skills.length / 2)).join(', ');
@@ -387,32 +389,169 @@
                         document.querySelector('textarea[name="technical_skills"]').value = technical;
                         document.querySelector('textarea[name="soft_skills"]').value = soft;
                     }
+                    
+                    // Load work experience
+                    if (profile.work_experience && profile.work_experience.length > 0) {
+                        loadWorkExperience(profile.work_experience);
+                    }
+                    
+                    // Load education
+                    if (profile.education && profile.education.length > 0) {
+                        loadEducation(profile.education);
+                    }
                 }
             } catch (error) {
                 console.error('Error loading resume data:', error);
             }
         }
+        
+        function loadWorkExperience(experiences) {
+            const container = document.getElementById('experienceContainer');
+            container.innerHTML = ''; // Clear existing
+            
+            experiences.forEach((exp, index) => {
+                if (index === 0) {
+                    // Update first item
+                    const firstItem = createExperienceItem();
+                    fillExperienceItem(firstItem, exp);
+                    container.appendChild(firstItem);
+                } else {
+                    // Add new items
+                    const newItem = createExperienceItem();
+                    fillExperienceItem(newItem, exp);
+                    container.appendChild(newItem);
+                }
+            });
+            
+            // If no experiences, add one empty item
+            if (experiences.length === 0) {
+                container.appendChild(createExperienceItem());
+            }
+        }
+        
+        function loadEducation(educationList) {
+            const container = document.getElementById('educationContainer');
+            container.innerHTML = ''; // Clear existing
+            
+            educationList.forEach((edu, index) => {
+                if (index === 0) {
+                    // Update first item
+                    const firstItem = createEducationItem();
+                    fillEducationItem(firstItem, edu);
+                    container.appendChild(firstItem);
+                } else {
+                    // Add new items
+                    const newItem = createEducationItem();
+                    fillEducationItem(newItem, edu);
+                    container.appendChild(newItem);
+                }
+            });
+            
+            // If no education, add one empty item
+            if (educationList.length === 0) {
+                container.appendChild(createEducationItem());
+            }
+        }
+        
+        function createExperienceItem() {
+            const template = `
+                <div class="experience-item">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Job Title</label>
+                            <input type="text" class="form-control" name="job_title[]" placeholder="e.g. Software Engineer">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Company</label>
+                            <input type="text" class="form-control" name="company[]" placeholder="e.g. Tech Company">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Start Date</label>
+                            <input type="month" class="form-control" name="start_date[]">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">End Date</label>
+                            <input type="month" class="form-control" name="end_date[]">
+                            <div class="form-check mt-2">
+                                <input class="form-check-input" type="checkbox" name="current_job[]">
+                                <label class="form-check-label">Currently working here</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Job Description</label>
+                        <textarea class="form-control" name="job_description[]" rows="3" 
+                                  placeholder="Describe your responsibilities and achievements..."></textarea>
+                    </div>
+                </div>
+            `;
+            const div = document.createElement('div');
+            div.innerHTML = template;
+            return div.firstElementChild;
+        }
+        
+        function createEducationItem() {
+            const template = `
+                <div class="education-item">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Degree</label>
+                            <input type="text" class="form-control" name="degree[]" placeholder="e.g. Bachelor of Technology">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Institution</label>
+                            <input type="text" class="form-control" name="institution[]" placeholder="e.g. University Name">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Year of Graduation</label>
+                            <input type="number" class="form-control" name="graduation_year[]" min="1990" max="2030">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Grade/CGPA</label>
+                            <input type="text" class="form-control" name="grade[]" placeholder="e.g. 8.5 CGPA">
+                        </div>
+                    </div>
+                </div>
+            `;
+            const div = document.createElement('div');
+            div.innerHTML = template;
+            return div.firstElementChild;
+        }
+        
+        function fillExperienceItem(item, data) {
+            item.querySelector('input[name="job_title[]"]').value = data.jobTitle || '';
+            item.querySelector('input[name="company[]"]').value = data.company || '';
+            item.querySelector('input[name="start_date[]"]').value = data.startDate || '';
+            
+            if (data.endDate === 'Present') {
+                item.querySelector('input[name="current_job[]"]').checked = true;
+            } else {
+                item.querySelector('input[name="end_date[]"]').value = data.endDate || '';
+            }
+            
+            item.querySelector('textarea[name="job_description[]"]').value = data.description || '';
+        }
+        
+        function fillEducationItem(item, data) {
+            item.querySelector('input[name="degree[]"]').value = data.degree || '';
+            item.querySelector('input[name="institution[]"]').value = data.institution || '';
+            item.querySelector('input[name="graduation_year[]"]').value = data.year || '';
+            item.querySelector('input[name="grade[]"]').value = data.grade || '';
+        }
 
         function addExperienceItem() {
             const container = document.getElementById('experienceContainer');
-            const newItem = container.querySelector('.experience-item').cloneNode(true);
-            
-            newItem.querySelectorAll('input, textarea').forEach(input => {
-                input.value = '';
-                if (input.type === 'checkbox') input.checked = false;
-            });
-            
+            const newItem = createExperienceItem();
             container.appendChild(newItem);
         }
 
         function addEducationItem() {
             const container = document.getElementById('educationContainer');
-            const newItem = container.querySelector('.education-item').cloneNode(true);
-            
-            newItem.querySelectorAll('input').forEach(input => {
-                input.value = '';
-            });
-            
+            const newItem = createEducationItem();
             container.appendChild(newItem);
         }
 

@@ -77,6 +77,8 @@ function createTables($conn) {
         profile_image VARCHAR(255),
         bio TEXT,
         skills TEXT,
+        work_experience JSON,
+        education JSON,
         experience_years INT DEFAULT 0,
         location VARCHAR(100),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
